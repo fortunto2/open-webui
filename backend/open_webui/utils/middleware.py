@@ -884,19 +884,21 @@ async def chat_image_generation_handler(
                 prompt = user_message
 
         # Clean prompt from reasoning/HTML tags before image generation
-        if prompt and isinstance(prompt, str):
-            import re
+        import re
+        def clean_reasoning_tags(text):
+            if not text or not isinstance(text, str):
+                return text
             # Remove <details>...</details> blocks (reasoning/thinking)
-            prompt = re.sub(
-                r'<details[^>]*>.*?</details>',
-                '',
-                prompt,
-                flags=re.DOTALL | re.IGNORECASE
-            )
+            text = re.sub(r'<details[^>]*>.*?</details>', '', text, flags=re.DOTALL | re.IGNORECASE)
             # Remove standalone <summary> tags
-            prompt = re.sub(r'<summary[^>]*>.*?</summary>', '', prompt, flags=re.DOTALL)
+            text = re.sub(r'<summary[^>]*>.*?</summary>', '', text, flags=re.DOTALL)
             # Clean up extra whitespace
-            prompt = re.sub(r'\n{3,}', '\n\n', prompt).strip()
+            return re.sub(r'\n{3,}', '\n\n', text).strip()
+
+        if isinstance(prompt, str):
+            prompt = clean_reasoning_tags(prompt)
+        elif isinstance(prompt, list):
+            prompt = clean_reasoning_tags(' '.join(str(p) for p in prompt))
 
         try:
             images = await image_generations(

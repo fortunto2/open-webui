@@ -555,6 +555,18 @@ async def image_generations(
     metadata: Optional[dict] = None,
     user=None,
 ):
+    # Clean prompt from reasoning/thinking HTML tags
+    if form_data.prompt and isinstance(form_data.prompt, str):
+        cleaned = re.sub(
+            r'<details[^>]*>.*?</details>',
+            '',
+            form_data.prompt,
+            flags=re.DOTALL | re.IGNORECASE
+        )
+        cleaned = re.sub(r'<summary[^>]*>.*?</summary>', '', cleaned, flags=re.DOTALL)
+        cleaned = re.sub(r'\n{3,}', '\n\n', cleaned).strip()
+        form_data.prompt = cleaned if cleaned else form_data.prompt
+
     # if IMAGE_SIZE = 'auto', default WidthxHeight to the 512x512 default
     # This is only relevant when the user has set IMAGE_SIZE to 'auto' with an
     # image model other than gpt-image-1, which is warned about on settings save
