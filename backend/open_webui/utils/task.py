@@ -260,12 +260,49 @@ def tags_generation_template(
     return template
 
 
+def strip_reasoning_tags(content: str) -> str:
+    """Remove reasoning/thinking HTML tags from content."""
+    if not content:
+        return content
+    # Remove <details>...</details> blocks (reasoning/thinking)
+    content = re.sub(
+        r'<details[^>]*>.*?</details>',
+        '',
+        content,
+        flags=re.DOTALL | re.IGNORECASE
+    )
+    # Remove standalone <summary> tags
+    content = re.sub(r'<summary[^>]*>.*?</summary>', '', content, flags=re.DOTALL)
+    # Clean up extra whitespace
+    content = re.sub(r'\n{3,}', '\n\n', content)
+    return content.strip()
+
+
+def clean_messages_for_image_prompt(messages: list[dict], max_chars: int = 4000) -> list[dict]:
+    """Clean messages for image prompt generation - strip HTML and truncate."""
+    cleaned = []
+    for msg in messages:
+        new_msg = msg.copy()
+        content = msg.get("content", "")
+        if isinstance(content, str):
+            content = strip_reasoning_tags(content)
+            # Truncate if too long
+            if len(content) > max_chars:
+                content = content[:max_chars] + "..."
+        new_msg["content"] = content
+        cleaned.append(new_msg)
+    return cleaned
+
+
 def image_prompt_generation_template(
     template: str, messages: list[dict], user: Optional[Any] = None
 ) -> str:
-    prompt = get_last_user_message(messages)
+    # Clean messages - strip reasoning tags and truncate
+    cleaned_messages = clean_messages_for_image_prompt(messages)
+
+    prompt = get_last_user_message(cleaned_messages)
     template = replace_prompt_variable(template, prompt)
-    template = replace_messages_variable(template, messages)
+    template = replace_messages_variable(template, cleaned_messages)
 
     template = prompt_template(template, user)
     return template
