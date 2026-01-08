@@ -661,6 +661,8 @@ async def image_generations(
                 "modalities": ["image", "text"],
             }
 
+            log.info(f"OpenRouter request: model={model}, prompt={form_data.prompt[:100]}")
+
             # Use asyncio.to_thread for the requests.post call
             r = await asyncio.to_thread(
                 requests.post,
@@ -672,10 +674,14 @@ async def image_generations(
             r.raise_for_status()
             res = r.json()
 
+            log.info(f"OpenRouter response keys: {res.keys()}")
+            log.info(f"OpenRouter response: {str(res)[:500]}")
+
             images = []
 
             # OpenRouter returns images in choices[0].message.images array
             message = res.get("choices", [{}])[0].get("message", {})
+            log.info(f"OpenRouter message keys: {message.keys()}")
             image_list = message.get("images", [])
 
             for img in image_list:
