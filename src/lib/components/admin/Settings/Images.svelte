@@ -558,21 +558,24 @@
 
 								<div class="flex w-full">
 									<div class="flex-1">
-										<select
-											class="w-full text-sm bg-transparent outline-hidden text-right dark:bg-gray-900"
+										<input
+											class="w-full text-sm bg-transparent outline-hidden text-right"
+											list="openrouter-models"
+											placeholder="google/gemini-3-pro-image-preview"
 											bind:value={config.IMAGE_GENERATION_MODEL}
-										>
-											<option value="google/gemini-3-pro-image-preview">Nano Banana Pro (Gemini 3)</option>
-											<option value="google/gemini-2.5-flash-image-preview">Nano Banana (Gemini 2.5 Flash)</option>
+										/>
+										<datalist id="openrouter-models">
+											<option value="google/gemini-3-pro-image-preview">Nano Banana Pro</option>
+											<option value="google/gemini-2.5-flash-image-preview">Nano Banana</option>
 											<option value="google/gemini-2.5-flash-image-preview:free">Nano Banana Free</option>
-										</select>
+										</datalist>
 									</div>
 								</div>
 							</div>
 						</div>
 
 						<div class="mb-2.5 text-xs text-gray-500">
-							{$i18n.t('Uses Gemini image models via chat completions with modalities')}
+							{$i18n.t('Supports any OpenRouter model with image generation')}
 						</div>
 					{:else if (config?.IMAGE_GENERATION_ENGINE ?? 'automatic1111') === 'automatic1111'}
 						<div class="mb-2.5">
