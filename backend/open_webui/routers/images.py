@@ -72,6 +72,12 @@ def get_image_model(request):
             if request.app.state.config.IMAGE_GENERATION_MODEL
             else "dall-e-2"
         )
+    elif request.app.state.config.IMAGE_GENERATION_ENGINE == "openrouter":
+        return (
+            request.app.state.config.IMAGE_GENERATION_MODEL
+            if request.app.state.config.IMAGE_GENERATION_MODEL
+            else "google/gemini-3-pro-image-preview"
+        )
     elif request.app.state.config.IMAGE_GENERATION_ENGINE == "gemini":
         return (
             request.app.state.config.IMAGE_GENERATION_MODEL
@@ -383,6 +389,12 @@ def get_models(request: Request, user=Depends(get_verified_user)):
                 {"id": "gpt-image-1", "name": "GPT-IMAGE 1"},
                 {"id": "gpt-image-1.5", "name": "GPT-IMAGE 1.5"},
             ]
+        elif request.app.state.config.IMAGE_GENERATION_ENGINE == "openrouter":
+            return [
+                {"id": "google/gemini-3-pro-image-preview", "name": "Nano Banana Pro (Gemini 3 Pro)"},
+                {"id": "google/gemini-2.5-flash-image-preview", "name": "Nano Banana (Gemini 2.5 Flash)"},
+                {"id": "google/gemini-2.5-flash-image-preview:free", "name": "Nano Banana Free"},
+            ]
         elif request.app.state.config.IMAGE_GENERATION_ENGINE == "gemini":
             return [
                 {"id": "imagen-3.0-generate-002", "name": "imagen-3.0 generate-002"},
@@ -625,6 +637,74 @@ async def image_generations(
                     request, image_data, content_type, {**data, **metadata}, user
                 )
                 images.append({"url": url})
+            return images
+
+        elif request.app.state.config.IMAGE_GENERATION_ENGINE == "openrouter":
+            # OpenRouter uses chat completions with modalities for image gen
+            api_key = request.app.state.config.IMAGES_OPENAI_API_KEY
+            base_url = request.app.state.config.IMAGES_OPENAI_API_BASE_URL
+            headers = {
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+                "HTTP-Referer": base_url or "https://openwebui.com",
+                "X-Title": "Open WebUI",
+            }
+
+            if ENABLE_FORWARD_USER_INFO_HEADERS:
+                headers = include_user_info_headers(headers, user)
+
+            url = f"{base_url}/chat/completions"
+
+            data = {
+                "model": model,
+                "messages": [{"role": "user", "content": form_data.prompt}],
+                "modalities": ["image", "text"],
+            }
+
+            # Use asyncio.to_thread for the requests.post call
+            r = await asyncio.to_thread(
+                requests.post,
+                url=url,
+                json=data,
+                headers=headers,
+            )
+
+            r.raise_for_status()
+            res = r.json()
+
+            images = []
+
+            # OpenRouter returns images in choices[0].message.images array
+            message = res.get("choices", [{}])[0].get("message", {})
+            image_list = message.get("images", [])
+
+            for img in image_list:
+                image_url = img.get("image_url", {}).get("url", "")
+                if image_url:
+                    image_data, content_type = get_image_data(image_url)
+                    if image_data:
+                        _, url = upload_image(
+                            request, image_data, content_type,
+                            {**data, **metadata}, user
+                        )
+                        images.append({"url": url})
+
+            # Fallback: check if image is in content as data URL
+            if not images:
+                content = message.get("content", "")
+                if "data:image" in content:
+                    # Extract base64 image from content
+                    pattern = r'data:image/[^;]+;base64,[A-Za-z0-9+/=]+'
+                    matches = re.findall(pattern, content)
+                    for match in matches:
+                        image_data, content_type = get_image_data(match)
+                        if image_data:
+                            _, url = upload_image(
+                                request, image_data, content_type,
+                                {**data, **metadata}, user
+                            )
+                            images.append({"url": url})
+
             return images
 
         elif request.app.state.config.IMAGE_GENERATION_ENGINE == "gemini":

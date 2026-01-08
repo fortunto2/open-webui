@@ -407,6 +407,7 @@
 								placeholder={$i18n.t('Select Engine')}
 							>
 								<option value="openai">{$i18n.t('Default (Open AI)')}</option>
+								<option value="openrouter">{$i18n.t('OpenRouter')}</option>
 								<option value="comfyui">{$i18n.t('ComfyUI')}</option>
 								<option value="automatic1111">{$i18n.t('Automatic1111')}</option>
 								<option value="gemini">{$i18n.t('Gemini')}</option>
@@ -494,6 +495,51 @@
 									/>
 								</div>
 							</div>
+						</div>
+					{:else if config?.IMAGE_GENERATION_ENGINE === 'openrouter'}
+						<div class="mb-2.5">
+							<div class="flex w-full justify-between items-center">
+								<div class="text-xs pr-2 shrink-0">
+									<div class="">
+										{$i18n.t('OpenRouter API Base URL')}
+									</div>
+								</div>
+
+								<div class="flex w-full">
+									<div class="flex-1">
+										<input
+											class="w-full text-sm bg-transparent outline-hidden text-right"
+											placeholder="https://openrouter.ai/api/v1"
+											bind:value={config.IMAGES_OPENAI_API_BASE_URL}
+										/>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="mb-2.5">
+							<div class="flex w-full justify-between items-center">
+								<div class="text-xs pr-2 shrink-0">
+									<div class="">
+										{$i18n.t('OpenRouter API Key')}
+									</div>
+								</div>
+
+								<div class="flex w-full">
+									<div class="flex-1">
+										<SensitiveInput
+											inputClassName="text-right w-full"
+											placeholder={$i18n.t('API Key')}
+											bind:value={config.IMAGES_OPENAI_API_KEY}
+											required={false}
+										/>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="mb-2.5 text-xs text-gray-500">
+							{$i18n.t('Uses Gemini image models via chat completions with modalities')}
 						</div>
 					{:else if (config?.IMAGE_GENERATION_ENGINE ?? 'automatic1111') === 'automatic1111'}
 						<div class="mb-2.5">
