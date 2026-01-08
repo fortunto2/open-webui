@@ -278,29 +278,27 @@ def strip_reasoning_tags(content: str) -> str:
     return content.strip()
 
 
-def clean_messages_for_image_prompt(messages: list[dict], max_chars: int = 4000) -> list[dict]:
-    """Clean messages for image prompt generation - strip HTML and truncate."""
-    cleaned = []
-    for msg in messages:
-        new_msg = msg.copy()
-        content = msg.get("content", "")
-        if isinstance(content, str):
-            content = strip_reasoning_tags(content)
-            # Truncate if too long
-            if len(content) > max_chars:
-                content = content[:max_chars] + "..."
-        new_msg["content"] = content
-        cleaned.append(new_msg)
-    return cleaned
+def clean_message_for_image_prompt(content: str, max_chars: int = 4000) -> str:
+    """Clean a single message for image prompt generation."""
+    if not content:
+        return content
+    content = strip_reasoning_tags(content)
+    # Truncate if too long
+    if len(content) > max_chars:
+        content = content[:max_chars] + "..."
+    return content
 
 
 def image_prompt_generation_template(
     template: str, messages: list[dict], user: Optional[Any] = None
 ) -> str:
-    # Clean messages - strip reasoning tags and truncate
-    cleaned_messages = clean_messages_for_image_prompt(messages)
+    # Get only the last user message and clean it
+    last_user_msg = get_last_user_message(messages)
+    prompt = clean_message_for_image_prompt(last_user_msg) if last_user_msg else ""
 
-    prompt = get_last_user_message(cleaned_messages)
+    # Create a single-message list with just the last user message
+    cleaned_messages = [{"role": "user", "content": prompt}] if prompt else []
+
     template = replace_prompt_variable(template, prompt)
     template = replace_messages_variable(template, cleaned_messages)
 
