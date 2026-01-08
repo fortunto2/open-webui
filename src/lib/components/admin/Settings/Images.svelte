@@ -405,6 +405,16 @@
 								class=" dark:bg-gray-900 w-fit pr-8 cursor-pointer rounded-sm px-2 text-xs bg-transparent outline-hidden text-right"
 								bind:value={config.IMAGE_GENERATION_ENGINE}
 								placeholder={$i18n.t('Select Engine')}
+								on:change={(e) => {
+									if (e.target.value === 'openrouter') {
+										if (!config.IMAGES_OPENAI_API_BASE_URL || config.IMAGES_OPENAI_API_BASE_URL === 'https://api.openai.com/v1') {
+											config.IMAGES_OPENAI_API_BASE_URL = 'https://openrouter.ai/api/v1';
+										}
+										if (!config.IMAGE_GENERATION_MODEL) {
+											config.IMAGE_GENERATION_MODEL = 'google/gemini-3-pro-image-preview';
+										}
+									}
+								}}
 							>
 								<option value="openai">{$i18n.t('Default (Open AI)')}</option>
 								<option value="openrouter">{$i18n.t('OpenRouter')}</option>
@@ -533,6 +543,29 @@
 											bind:value={config.IMAGES_OPENAI_API_KEY}
 											required={false}
 										/>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="mb-2.5">
+							<div class="flex w-full justify-between items-center">
+								<div class="text-xs pr-2 shrink-0">
+									<div class="">
+										{$i18n.t('Model')}
+									</div>
+								</div>
+
+								<div class="flex w-full">
+									<div class="flex-1">
+										<select
+											class="w-full text-sm bg-transparent outline-hidden text-right dark:bg-gray-900"
+											bind:value={config.IMAGE_GENERATION_MODEL}
+										>
+											<option value="google/gemini-3-pro-image-preview">Nano Banana Pro (Gemini 3)</option>
+											<option value="google/gemini-2.5-flash-image-preview">Nano Banana (Gemini 2.5 Flash)</option>
+											<option value="google/gemini-2.5-flash-image-preview:free">Nano Banana Free</option>
+										</select>
 									</div>
 								</div>
 							</div>
