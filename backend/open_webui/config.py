@@ -1791,7 +1791,7 @@ Strictly return in JSON format:
 
 ### Chat History:
 <chat_history>
-{{MESSAGES:END:6}}
+{{MESSAGES:END:1}}
 </chat_history>"""
 
 
