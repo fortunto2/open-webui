@@ -278,7 +278,7 @@ def strip_reasoning_tags(content: str) -> str:
     return content.strip()
 
 
-def clean_message_for_image_prompt(content: str, max_chars: int = 4000) -> str:
+def clean_message_for_image_prompt(content: str, max_chars: int = 16000) -> str:
     """Clean a single message for image prompt generation."""
     if not content:
         return content
