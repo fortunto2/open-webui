@@ -883,6 +883,21 @@ async def chat_image_generation_handler(
                 log.exception(e)
                 prompt = user_message
 
+        # Clean prompt from reasoning/HTML tags before image generation
+        if prompt and isinstance(prompt, str):
+            import re
+            # Remove <details>...</details> blocks (reasoning/thinking)
+            prompt = re.sub(
+                r'<details[^>]*>.*?</details>',
+                '',
+                prompt,
+                flags=re.DOTALL | re.IGNORECASE
+            )
+            # Remove standalone <summary> tags
+            prompt = re.sub(r'<summary[^>]*>.*?</summary>', '', prompt, flags=re.DOTALL)
+            # Clean up extra whitespace
+            prompt = re.sub(r'\n{3,}', '\n\n', prompt).strip()
+
         try:
             images = await image_generations(
                 request=request,
